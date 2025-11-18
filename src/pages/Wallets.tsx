@@ -2,10 +2,11 @@ import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppNavbar } from "@/components/AppNavbar";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Copy, Trash2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { AddWalletModal } from "@/components/AddWalletModal";
+import { Button } from "@/components/ui/button";
 
 interface WalletData {
   id: string;
@@ -33,6 +34,7 @@ const mockWallets: WalletData[] = [
 
 const Wallets = () => {
   const [wallets, setWallets] = useState<WalletData[]>(mockWallets);
+  const [isAddWalletOpen, setIsAddWalletOpen] = useState(false);
   const maxSlots = 10;
   const availableSlots = maxSlots - wallets.length;
 
@@ -44,6 +46,15 @@ const Wallets = () => {
   const handleDeleteWallet = (id: string) => {
     setWallets(wallets.filter((wallet) => wallet.id !== id));
     toast.success("Wallet removed successfully");
+  };
+
+  const handleAddWallet = (wallet: { token: string; network: string; address: string }) => {
+    const newWallet: WalletData = {
+      id: Date.now().toString(),
+      address: wallet.address,
+      tokens: [wallet.token, wallet.network],
+    };
+    setWallets([...wallets, newWallet]);
   };
 
   return (
@@ -118,7 +129,10 @@ const Wallets = () => {
                   </div>
                 ))}
 
-                  <button className="w-full bg-card border border-border rounded-lg p-4 flex items-center justify-center gap-2 text-foreground hover:border-primary/50 hover:bg-muted/30 transition-colors">
+                  <button 
+                    onClick={() => setIsAddWalletOpen(true)}
+                    className="w-full bg-card border border-border rounded-lg p-4 flex items-center justify-center gap-2 text-foreground hover:border-primary/50 hover:bg-muted/30 transition-colors"
+                  >
                     <Plus className="h-4 w-4" />
                     <span className="text-sm font-medium">
                       Add New Wallet ({availableSlots} slots available)
@@ -130,6 +144,12 @@ const Wallets = () => {
           </main>
         </div>
       </div>
+
+      <AddWalletModal
+        open={isAddWalletOpen}
+        onOpenChange={setIsAddWalletOpen}
+        onAddWallet={handleAddWallet}
+      />
     </SidebarProvider>
   );
 };
