@@ -103,57 +103,54 @@ const PaymentLinks = () => {
                 </Button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {paymentLinks.map((link) => (
                   <div
                     key={link.id}
-                    className="bg-card border border-border rounded-lg p-5 hover:border-primary/30 transition-colors"
+                    className="bg-card border border-border rounded-lg p-4 hover:border-primary/30 transition-colors"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-4 flex-1 min-w-0">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <LinkIcon className="h-5 w-5 text-primary" />
-                        </div>
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-foreground mb-1">
+                          <h3 className="text-base font-medium text-foreground">
                             {link.title}
                           </h3>
-                          <p className="text-sm text-muted-foreground mb-3">
+                          <p className="text-xs text-muted-foreground">
                             {link.description}
                           </p>
-                          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 font-semibold">
-                            {link.amount} {link.currency}
-                          </Badge>
+                        </div>
+
+                        <div className="text-sm font-semibold text-foreground">
+                          {link.amount} {link.currency}
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end gap-3">
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleViewLink(link.link)}
-                            className="gap-2"
-                          >
-                            <Eye className="h-3 w-3" />
-                            View Link
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleRemoveLink(link.id, link.title)}
-                            className="gap-2 text-destructive hover:text-destructive border-destructive/50"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            Remove
-                          </Button>
-                        </div>
-                        
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          <span>Expires in: {calculateTimeRemaining(link.expiresAt)}</span>
-                        </div>
+                          Expires in: {calculateTimeRemaining(link.expiresAt)}
+                        </span>
+                        
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleViewLink(link.link)}
+                          className="gap-1 h-8"
+                        >
+                          <Eye className="h-3 w-3" />
+                          View Link
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveLink(link.id, link.title)}
+                          className="gap-1 h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Remove
+                        </Button>
                       </div>
                     </div>
                   </div>
