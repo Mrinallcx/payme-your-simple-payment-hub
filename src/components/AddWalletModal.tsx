@@ -23,25 +23,36 @@ const networks = ["ETH", "BASE", "SOL", "BNB (BEP20)"];
 
 export function AddWalletModal({ open, onOpenChange, onAddWallet }: AddWalletModalProps) {
   const [step, setStep] = useState(1);
-  const [selectedToken, setSelectedToken] = useState("");
+  const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
   const [selectedNetwork, setSelectedNetwork] = useState("");
   const [walletAddress, setWalletAddress] = useState("");
 
   const handleClose = () => {
     setStep(1);
-    setSelectedToken("");
+    setSelectedTokens([]);
     setSelectedNetwork("");
     setWalletAddress("");
     onOpenChange(false);
   };
 
-  const handleTokenSelect = (token: string) => {
-    setSelectedToken(token);
+  const handleNetworkSelect = (network: string) => {
+    setSelectedNetwork(network);
     setStep(2);
   };
 
-  const handleNetworkSelect = (network: string) => {
-    setSelectedNetwork(network);
+  const handleTokenToggle = (token: string) => {
+    setSelectedTokens((prev) =>
+      prev.includes(token)
+        ? prev.filter((t) => t !== token)
+        : [...prev, token]
+    );
+  };
+
+  const handleContinueToAddress = () => {
+    if (selectedTokens.length === 0) {
+      toast.error("Please select at least one token");
+      return;
+    }
     setStep(3);
   };
 
@@ -51,19 +62,22 @@ export function AddWalletModal({ open, onOpenChange, onAddWallet }: AddWalletMod
       return;
     }
 
-    onAddWallet({
-      token: selectedToken,
-      network: selectedNetwork,
-      address: walletAddress,
+    // Add wallet for each selected token
+    selectedTokens.forEach((token) => {
+      onAddWallet({
+        token,
+        network: selectedNetwork,
+        address: walletAddress,
+      });
     });
 
-    toast.success("Wallet added successfully!");
+    toast.success(`Wallet added with ${selectedTokens.length} token(s)!`);
     handleClose();
   };
 
   const handleBack = () => {
     if (step === 2) {
-      setSelectedNetwork("");
+      setSelectedTokens([]);
     } else if (step === 3) {
       setWalletAddress("");
     }
@@ -75,33 +89,19 @@ export function AddWalletModal({ open, onOpenChange, onAddWallet }: AddWalletMod
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            {step === 1 && "Select Token"}
-            {step === 2 && "Select Network"}
+            {step === 1 && "Select Network"}
+            {step === 2 && "Select Tokens"}
             {step === 3 && "Enter Wallet Address"}
           </DialogTitle>
           <DialogDescription>
-            {step === 1 && "Choose which token you want to add"}
-            {step === 2 && `Choose network for ${selectedToken}`}
-            {step === 3 && `Enter your ${selectedToken} wallet address for ${selectedNetwork}`}
+            {step === 1 && "Choose which network you want to use"}
+            {step === 2 && `Select one or more tokens for ${selectedNetwork}`}
+            {step === 3 && `Enter your wallet address for ${selectedNetwork}`}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {step === 1 && (
-            <div className="grid grid-cols-2 gap-3">
-              {tokens.map((token) => (
-                <button
-                  key={token}
-                  onClick={() => handleTokenSelect(token)}
-                  className="p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition-all text-center font-medium text-foreground"
-                >
-                  {token}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {step === 2 && (
             <div className="space-y-3">
               {networks.map((network) => (
                 <button
@@ -118,6 +118,39 @@ export function AddWalletModal({ open, onOpenChange, onAddWallet }: AddWalletMod
             </div>
           )}
 
+          {step === 2 && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground mb-2">
+                Select all tokens you want to use with this address
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {tokens.map((token) => (
+                  <button
+                    key={token}
+                    onClick={() => handleTokenToggle(token)}
+                    className={`p-4 border rounded-lg transition-all text-center font-medium ${
+                      selectedTokens.includes(token)
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border text-foreground hover:border-primary/50 hover:bg-primary/5"
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-2">
+                      {token}
+                      {selectedTokens.includes(token) && (
+                        <Check className="h-4 w-4" />
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+              {selectedTokens.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  {selectedTokens.length} token(s) selected
+                </p>
+              )}
+            </div>
+          )}
+
           {step === 3 && (
             <div className="space-y-4">
               <div className="space-y-2">
@@ -131,14 +164,14 @@ export function AddWalletModal({ open, onOpenChange, onAddWallet }: AddWalletMod
                 />
               </div>
 
-              <div className="bg-muted/50 p-3 rounded-lg space-y-1">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Token:</span>
-                  <span className="font-medium text-foreground">{selectedToken}</span>
-                </div>
+              <div className="bg-muted/50 p-3 rounded-lg space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Network:</span>
                   <span className="font-medium text-foreground">{selectedNetwork}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Tokens:</span>
+                  <span className="font-medium text-foreground">{selectedTokens.join(", ")}</span>
                 </div>
               </div>
             </div>
@@ -151,11 +184,17 @@ export function AddWalletModal({ open, onOpenChange, onAddWallet }: AddWalletMod
               Back
             </Button>
           )}
-          {step < 3 ? (
+          {step === 1 && (
             <Button variant="outline" onClick={handleClose} className="flex-1">
               Cancel
             </Button>
-          ) : (
+          )}
+          {step === 2 && (
+            <Button onClick={handleContinueToAddress} className="flex-1">
+              Continue
+            </Button>
+          )}
+          {step === 3 && (
             <Button onClick={handleAddWallet} className="flex-1">
               Add Wallet
             </Button>
