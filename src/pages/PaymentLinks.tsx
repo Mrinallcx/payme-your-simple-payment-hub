@@ -103,60 +103,56 @@ const PaymentLinks = () => {
                 </Button>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {paymentLinks.map((link) => (
                   <div
                     key={link.id}
-                    className="bg-card border border-border rounded-lg p-4 hover:border-primary/30 transition-colors"
+                    className="bg-card border border-border rounded-lg p-5 hover:border-primary/30 transition-colors"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <div className="flex items-start gap-3 flex-1 min-w-0">
-                        <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-4 flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <LinkIcon className="h-5 w-5 text-primary" />
+                        </div>
                         
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <h3 className="text-base font-medium text-foreground">
-                              {link.title}
-                            </h3>
-                            <div className="text-sm font-semibold text-foreground whitespace-nowrap sm:hidden">
-                              {link.amount} {link.currency}
-                            </div>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
+                          <h3 className="text-lg font-semibold text-foreground mb-1">
+                            {link.title}
+                          </h3>
+                          <p className="text-sm text-muted-foreground mb-3">
                             {link.description}
                           </p>
-                        </div>
-
-                        <div className="text-sm font-semibold text-foreground whitespace-nowrap hidden sm:block">
-                          {link.amount} {link.currency}
+                          <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 font-semibold">
+                            {link.amount} {link.currency}
+                          </Badge>
                         </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1 sm:mr-1">
-                          <Clock className="h-3 w-3" />
-                          <span className="sm:inline">Expires in: {calculateTimeRemaining(link.expiresAt)}</span>
-                        </span>
-                        
+                      <div className="flex flex-col items-end gap-3">
                         <div className="flex gap-2">
                           <Button
                             size="sm"
-                            variant="ghost"
+                            variant="outline"
                             onClick={() => handleViewLink(link.link)}
-                            className="gap-1 h-8 flex-1 sm:flex-none"
+                            className="gap-2"
                           >
                             <Eye className="h-3 w-3" />
-                            <span className="sm:inline">View</span>
+                            View Link
                           </Button>
                           <Button
                             size="sm"
-                            variant="ghost"
+                            variant="outline"
                             onClick={() => handleRemoveLink(link.id, link.title)}
-                            className="gap-1 h-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-1 sm:flex-none"
+                            className="gap-2 text-destructive hover:text-destructive border-destructive/50"
                           >
                             <Trash2 className="h-3 w-3" />
-                            <span className="sm:inline">Remove</span>
+                            Remove
                           </Button>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          <span>Expires in: {calculateTimeRemaining(link.expiresAt)}</span>
                         </div>
                       </div>
                     </div>

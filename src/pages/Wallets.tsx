@@ -72,52 +72,50 @@ const Wallets = () => {
                   {wallets.map((wallet) => (
                     <div
                       key={wallet.id}
-                      className="bg-card border border-border rounded-lg p-4 hover:border-primary/30 transition-colors"
+                      className="bg-card border border-border rounded-lg p-4 flex items-center justify-between hover:border-primary/30 transition-colors"
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                            <div className="w-6 h-6 rounded-full bg-primary/20" />
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground mb-1 break-all">
-                              {wallet.address}
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {wallet.tokens.map((token) => (
-                                <Badge
-                                  key={token}
-                                  variant="secondary"
-                                  className="text-xs bg-muted text-foreground hover:bg-muted"
-                                >
-                                  {token}
-                                </Badge>
-                              ))}
-                            </div>
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <div className="w-6 h-6 rounded-full bg-primary/20" />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground mb-1 break-all">
+                            {wallet.address}
+                          </p>
+                          <div className="flex gap-2">
+                            {wallet.tokens.map((token) => (
+                              <Badge
+                                key={token}
+                                variant="secondary"
+                                className="text-xs bg-muted text-foreground hover:bg-muted"
+                              >
+                                {token}
+                              </Badge>
+                            ))}
                           </div>
                         </div>
+                      </div>
 
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleCopyAddress(wallet.address)}
-                            className="gap-2 flex-1 sm:flex-none"
-                          >
-                            <Copy className="h-3 w-3" />
-                            Copy
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteWallet(wallet.id)}
-                            className="gap-2 text-destructive hover:text-destructive border-destructive/50 flex-1 sm:flex-none"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            Remove
-                          </Button>
-                        </div>
+                      <div className="flex gap-2 ml-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleCopyAddress(wallet.address)}
+                          className="gap-2"
+                        >
+                          <Copy className="h-3 w-3" />
+                          Copy
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDeleteWallet(wallet.id)}
+                          className="gap-2 text-destructive hover:text-destructive border-destructive/50"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          Remove
+                        </Button>
                       </div>
                     </div>
                   ))}
