@@ -109,48 +109,55 @@ const PaymentLinks = () => {
                     key={link.id}
                     className="bg-card border border-border rounded-lg p-4 hover:border-primary/30 transition-colors"
                   >
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex items-start gap-3 flex-1 min-w-0">
+                        <LinkIcon className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                         
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-base font-medium text-foreground">
-                            {link.title}
-                          </h3>
+                          <div className="flex items-start justify-between gap-2 mb-1">
+                            <h3 className="text-base font-medium text-foreground">
+                              {link.title}
+                            </h3>
+                            <div className="text-sm font-semibold text-foreground whitespace-nowrap sm:hidden">
+                              {link.amount} {link.currency}
+                            </div>
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {link.description}
                           </p>
                         </div>
 
-                        <div className="text-sm font-semibold text-foreground">
+                        <div className="text-sm font-semibold text-foreground whitespace-nowrap hidden sm:block">
                           {link.amount} {link.currency}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1 sm:mr-1">
                           <Clock className="h-3 w-3" />
-                          Expires in: {calculateTimeRemaining(link.expiresAt)}
+                          <span className="sm:inline">Expires in: {calculateTimeRemaining(link.expiresAt)}</span>
                         </span>
                         
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleViewLink(link.link)}
-                          className="gap-1 h-8"
-                        >
-                          <Eye className="h-3 w-3" />
-                          View Link
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRemoveLink(link.id, link.title)}
-                          className="gap-1 h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Remove
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleViewLink(link.link)}
+                            className="gap-1 h-8 flex-1 sm:flex-none"
+                          >
+                            <Eye className="h-3 w-3" />
+                            <span className="sm:inline">View</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemoveLink(link.id, link.title)}
+                            className="gap-1 h-8 text-destructive hover:text-destructive hover:bg-destructive/10 flex-1 sm:flex-none"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span className="sm:inline">Remove</span>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
