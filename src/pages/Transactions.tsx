@@ -11,25 +11,22 @@ interface Transaction {
   type: "sent" | "received";
   status: "success" | "pending" | "failed";
   amount: string;
-  description: string;
   date: string;
-  recipient?: string;
+  from: string;
+  recipient: string;
 }
 
 const statusConfig = {
   success: {
-    icon: CheckCircle2,
-    color: "text-success",
+    color: "bg-success/10 text-success border-success/20",
     label: "Success",
   },
   pending: {
-    icon: Clock,
-    color: "text-warning",
+    color: "bg-warning/10 text-warning border-warning/20",
     label: "Pending",
   },
   failed: {
-    icon: XCircle,
-    color: "text-destructive",
+    color: "bg-destructive/10 text-destructive border-destructive/20",
     label: "Failed",
   },
 };
@@ -40,8 +37,8 @@ const mockTransactions: Transaction[] = [
     type: "received",
     status: "success",
     amount: "1,250.00",
-    description: "Payment from Client A",
     date: "2025-01-15 10:30 AM",
+    from: "0x456a...7c9d",
     recipient: "0x742d...4e8a",
   },
   {
@@ -49,8 +46,8 @@ const mockTransactions: Transaction[] = [
     type: "sent",
     status: "success",
     amount: "500.00",
-    description: "Transfer to Wallet B",
     date: "2025-01-14 03:45 PM",
+    from: "0x742d...4e8a",
     recipient: "0x893f...2b1c",
   },
   {
@@ -58,8 +55,8 @@ const mockTransactions: Transaction[] = [
     type: "received",
     status: "pending",
     amount: "750.00",
-    description: "Payment Link #1234",
     date: "2025-01-13 09:15 AM",
+    from: "0x123b...5e6f",
     recipient: "0x456a...7c9d",
   },
   {
@@ -67,17 +64,17 @@ const mockTransactions: Transaction[] = [
     type: "sent",
     status: "failed",
     amount: "200.00",
-    description: "Withdrawal to Bank",
     date: "2025-01-12 02:20 PM",
-    recipient: "Bank Account",
+    from: "0x742d...4e8a",
+    recipient: "0x893f...2b1c",
   },
   {
     id: "5",
     type: "received",
     status: "success",
     amount: "2,100.00",
-    description: "Subscription Payment",
     date: "2025-01-11 11:00 AM",
+    from: "0x789c...1a2b",
     recipient: "0x123b...5e6f",
   },
 ];
@@ -105,9 +102,9 @@ const Transactions = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[100px]">Type</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="hidden sm:table-cell">Recipient</TableHead>
+                        <TableHead className="w-[50px]"></TableHead>
+                        <TableHead className="hidden sm:table-cell">From</TableHead>
+                        <TableHead>Recipient</TableHead>
                         <TableHead className="hidden md:table-cell">Date</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
                         <TableHead className="text-center w-[100px]">Status</TableHead>
@@ -115,44 +112,37 @@ const Transactions = () => {
                     </TableHeader>
                     <TableBody>
                       {transactions.map((transaction) => {
-                        const StatusIcon = statusConfig[transaction.status].icon;
                         const TypeIcon = transaction.type === "sent" ? ArrowUpRight : ArrowDownLeft;
                         
                         return (
                           <TableRow key={transaction.id}>
                             <TableCell>
-                              <div className="flex items-center gap-2">
-                                <div className={`p-1.5 rounded-md ${transaction.type === "sent" ? "bg-muted" : "bg-primary/10"}`}>
-                                  <TypeIcon className={`h-3 w-3 ${transaction.type === "sent" ? "text-foreground" : "text-primary"}`} />
-                                </div>
-                                <span className="text-xs font-medium capitalize hidden sm:inline">
-                                  {transaction.type}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="text-sm font-medium text-foreground">{transaction.description}</p>
-                                <p className="text-xs text-muted-foreground md:hidden">{transaction.date}</p>
+                              <div className={`p-1.5 rounded-md ${transaction.type === "sent" ? "bg-muted" : "bg-primary/10"}`}>
+                                <TypeIcon className={`h-3 w-3 ${transaction.type === "sent" ? "text-foreground" : "text-primary"}`} />
                               </div>
                             </TableCell>
                             <TableCell className="hidden sm:table-cell">
-                              <span className="text-xs text-muted-foreground">{transaction.recipient}</span>
+                              <span className="text-xs text-muted-foreground">{transaction.from}</span>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <span className="text-xs text-muted-foreground">{transaction.recipient}</span>
+                                <p className="text-xs text-muted-foreground md:hidden mt-1">{transaction.date}</p>
+                              </div>
                             </TableCell>
                             <TableCell className="hidden md:table-cell">
                               <span className="text-xs text-muted-foreground">{transaction.date}</span>
                             </TableCell>
                             <TableCell className="text-right">
-                              <span className={`text-sm font-semibold ${transaction.type === "sent" ? "text-foreground" : "text-primary"}`}>
+                              <span className="text-sm font-semibold text-foreground">
                                 {transaction.type === "sent" ? "-" : "+"} ${transaction.amount}
                               </span>
                             </TableCell>
                             <TableCell>
-                              <div className="flex items-center justify-center gap-1">
-                                <StatusIcon className={`h-3 w-3 ${statusConfig[transaction.status].color}`} />
-                                <span className={`text-xs font-medium capitalize ${statusConfig[transaction.status].color}`}>
+                              <div className="flex justify-center">
+                                <Badge variant="outline" className={`text-xs ${statusConfig[transaction.status].color}`}>
                                   {statusConfig[transaction.status].label}
-                                </span>
+                                </Badge>
                               </div>
                             </TableCell>
                           </TableRow>
