@@ -157,24 +157,24 @@ const Transactions = () => {
               </div>
 
               {/* Filters and Export */}
-              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-4">
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filter by type" />
+                  <SelectTrigger className="h-8 w-[120px] text-xs">
+                    <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="sent">Sent</SelectItem>
                     <SelectItem value="received">Received</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
+                  <SelectTrigger className="h-8 w-[120px] text-xs">
+                    <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="all">All</SelectItem>
                     <SelectItem value="success">Success</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="failed">Failed</SelectItem>
@@ -183,11 +183,12 @@ const Transactions = () => {
 
                 <Button
                   onClick={handleExport}
-                  variant="outline"
-                  className="ml-auto"
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 ml-auto"
                 >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
+                  <Download className="h-3 w-3 sm:mr-2" />
+                  <span className="hidden sm:inline">Export</span>
                 </Button>
               </div>
 
@@ -249,36 +250,40 @@ const Transactions = () => {
 
               {/* Pagination */}
               {filteredTransactions.length > itemsPerPage && (
-                <div className="mt-4">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                      
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            onClick={() => setCurrentPage(page)}
-                            isActive={currentPage === page}
-                            className="cursor-pointer"
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
+                <div className="flex items-center justify-center gap-1 mt-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 text-xs"
+                  >
+                    Previous
+                  </Button>
+                  
+                  <div className="flex items-center gap-1 px-2">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? "default" : "ghost"}
+                        size="sm"
+                        onClick={() => setCurrentPage(page)}
+                        className="h-8 w-8 p-0 text-xs"
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
 
-                      <PaginationItem>
-                        <PaginationNext
-                          onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="h-8 text-xs"
+                  >
+                    Next
+                  </Button>
                 </div>
               )}
 
