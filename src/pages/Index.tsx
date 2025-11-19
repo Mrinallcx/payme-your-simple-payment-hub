@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppNavbar } from "@/components/AppNavbar";
@@ -35,6 +36,7 @@ const mockWallets = [
 const Index = () => {
   const [isCreateLinkOpen, setIsCreateLinkOpen] = useState(false);
   const [isAddWalletOpen, setIsAddWalletOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleAddWallet = (wallet: { token: string; network: string; address: string }) => {
     toast({
@@ -121,6 +123,7 @@ const Index = () => {
               <QuickActions 
                 onCreateLink={() => setIsCreateLinkOpen(true)} 
                 onAddWallet={() => setIsAddWalletOpen(true)}
+                onSettings={() => navigate("/settings")}
               />
             </div>
           </main>
