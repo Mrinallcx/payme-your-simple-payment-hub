@@ -1,4 +1,4 @@
-import { LayoutDashboard, Link2, Receipt, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Link2, Receipt, LogOut } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect } from 'wagmi';
@@ -17,7 +17,6 @@ const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Payment Links", url: "/payment-links", icon: Link2 },
   { title: "Transactions", url: "/transactions", icon: Receipt },
-  { title: "Settings", url: "/settings", icon: Settings },
 ];
 
 export function AppSidebar() {
