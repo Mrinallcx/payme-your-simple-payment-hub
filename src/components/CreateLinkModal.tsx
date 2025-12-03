@@ -293,10 +293,12 @@ export function CreateLinkModal({ open, onOpenChange, onCreateLink }: CreateLink
                           : "border-border hover:border-primary/50 hover:bg-muted/50"
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-full ${token.color} flex items-center justify-center`}>
-                        <span className="text-white text-xs font-bold">
-                          {token.symbol.charAt(0)}
-                        </span>
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                        <img 
+                          src={`/tokenicon/${token.symbol.toLowerCase()}.svg`}
+                          alt={token.symbol}
+                          className="w-full h-full object-contain"
+                        />
                       </div>
                       <div className="text-left">
                         <p className="font-semibold text-sm">{token.symbol}</p>
@@ -348,8 +350,12 @@ export function CreateLinkModal({ open, onOpenChange, onCreateLink }: CreateLink
                             : "border-border hover:border-primary/50"
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-full ${isDisabled ? "bg-gray-400" : network.color} flex items-center justify-center`}>
-                          <Globe className="h-5 w-5 text-white" />
+                        <div className={`w-10 h-10 rounded-full ${isDisabled ? "bg-gray-400" : "bg-transparent"} flex items-center justify-center overflow-hidden`}>
+                          <img 
+                            src="/tokenicon/eth.svg"
+                            alt="Ethereum"
+                            className="w-full h-full object-contain"
+                          />
                         </div>
                         <div className="flex-1 text-left">
                           <span className={`font-medium ${isDisabled ? "text-muted-foreground" : ""}`}>{network.name}</span>
