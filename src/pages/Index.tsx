@@ -258,11 +258,7 @@ const Index = () => {
                     </DashboardCard>
                   </div>
 
-                  <QuickActions 
-                    onCreateLink={handleCreateLinkClick} 
-                    onAddWallet={() => {}}
-                    onSettings={() => navigate("/settings")}
-                  />
+                  <QuickActions onCreateLink={handleCreateLinkClick} />
                 </>
               )}
             </div>
