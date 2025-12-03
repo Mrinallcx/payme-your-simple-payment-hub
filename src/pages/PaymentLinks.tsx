@@ -165,9 +165,8 @@ const PaymentLinks = () => {
                   </p>
                 </div>
                 {isConnected && (
-                  <Button className="gap-2" onClick={handleCreateLinkClick}>
-                    <Plus className="h-4 w-4" />
-                    Create Link
+                  <Button variant="outline" size="icon" onClick={() => fetchPaymentLinks(true)} disabled={isRefreshing}>
+                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                   </Button>
                 )}
               </div>
