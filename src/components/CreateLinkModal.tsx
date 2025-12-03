@@ -24,7 +24,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { GiPayMoney } from "react-icons/gi";
-import { FaGlobe } from "react-icons/fa";
+import { FaGlobe, FaFile } from "react-icons/fa";
 import { MdAccessTimeFilled } from "react-icons/md";
 import { toast } from "sonner";
 import { createPaymentLink } from "@/lib/api";
@@ -71,7 +71,7 @@ const STEPS = [
   { key: "amount-token", label: "Amount", icon: GiPayMoney },
   { key: "network", label: "Network", icon: FaGlobe },
   { key: "expiration", label: "Expiry", icon: MdAccessTimeFilled },
-  { key: "details", label: "Details", icon: FileText },
+  { key: "details", label: "Details", icon: FaFile },
 ];
 
 export function CreateLinkModal({ open, onOpenChange, onCreateLink }: CreateLinkModalProps) {
