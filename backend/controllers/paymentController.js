@@ -91,20 +91,39 @@ exports.verifyPayment = async (req, res) => {
             return res.status(400).json({ error: 'Request already paid' });
         }
 
-        // Determine token address based on token type
+        // Determine token address based on token type and network
         const tokenSymbol = request.token?.toUpperCase() || 'USDC';
-        const isNativeToken = tokenSymbol === 'ETH'; // Only ETH is native, BNB is ERC20
+        const network = request.network || 'sepolia';
+        const networkLower = network.toLowerCase();
         
-        // Select the correct token address
+        // Check if token is native on this network
+        // ETH is native on Ethereum, BNB is native on BNB chains
+        const isNativeToken = tokenSymbol === 'ETH' || 
+            (tokenSymbol === 'BNB' && networkLower.includes('bnb'));
+        
+        // Select the correct token address based on network
         let tokenAddress = null;
         if (!isNativeToken) {
+            const isBnbTestnet = networkLower.includes('bnb') && networkLower.includes('test');
+            
             if (tokenSymbol === 'USDT') {
-                tokenAddress = process.env.NEXT_PUBLIC_USDT_ADDRESS;
+                tokenAddress = isBnbTestnet 
+                    ? process.env.NEXT_PUBLIC_BNB_TESTNET_USDT_ADDRESS 
+                    : process.env.NEXT_PUBLIC_USDT_ADDRESS;
+            } else if (tokenSymbol === 'USDC') {
+                tokenAddress = isBnbTestnet 
+                    ? process.env.NEXT_PUBLIC_BNB_TESTNET_USDC_ADDRESS 
+                    : process.env.NEXT_PUBLIC_USDC_ADDRESS;
             } else if (tokenSymbol === 'BNB') {
+                // BNB as ERC20 (WBNB) on Sepolia
                 tokenAddress = process.env.NEXT_PUBLIC_BNB_ADDRESS;
+            } else if (tokenSymbol === 'LCX') {
+                tokenAddress = process.env.NEXT_PUBLIC_LCX_ADDRESS;
             } else {
-                // Default to USDC for other tokens
-                tokenAddress = process.env.NEXT_PUBLIC_USDC_ADDRESS;
+                // Default to USDC
+                tokenAddress = isBnbTestnet 
+                    ? process.env.NEXT_PUBLIC_BNB_TESTNET_USDC_ADDRESS 
+                    : process.env.NEXT_PUBLIC_USDC_ADDRESS;
             }
         }
 
@@ -113,7 +132,8 @@ exports.verifyPayment = async (req, res) => {
             request.amount,
             tokenAddress,
             request.receiver,
-            tokenSymbol  // Pass token symbol for ETH detection
+            tokenSymbol,
+            network  // Pass network for proper RPC selection
         );
 
         if (!verification.valid) {

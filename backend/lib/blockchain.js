@@ -1,7 +1,8 @@
 const { ethers } = require('ethers');
 
-// Sepolia RPC endpoint
+// RPC endpoints
 const ETH_RPC = process.env.NEXT_PUBLIC_ETH_RPC_URL || process.env.NEXT_PUBLIC_POLYGON_RPC_URL;
+const BNB_TESTNET_RPC = process.env.NEXT_PUBLIC_BNB_TESTNET_RPC_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545/';
 const USDC_ADDRESS = process.env.NEXT_PUBLIC_USDC_ADDRESS;
 
 // Minimal ERC20 ABI for transfer events
@@ -11,12 +12,42 @@ const ERC20_ABI = [
 ];
 
 /**
+ * Get RPC provider based on network
+ */
+function getProvider(network) {
+  const networkLower = (network || '').toLowerCase();
+  
+  if (networkLower.includes('bnb') && networkLower.includes('test')) {
+    return new ethers.JsonRpcProvider(BNB_TESTNET_RPC);
+  }
+  
+  // Default to ETH/Sepolia
+  return new ethers.JsonRpcProvider(ETH_RPC);
+}
+
+/**
+ * Check if token is native on the given network
+ */
+function isNativeTokenOnNetwork(tokenSymbol, network) {
+  const tokenUpper = (tokenSymbol || '').toUpperCase();
+  const networkLower = (network || '').toLowerCase();
+  
+  // ETH is native on Ethereum networks
+  if (tokenUpper === 'ETH') return true;
+  
+  // BNB is native on BNB Chain/Testnet
+  if (tokenUpper === 'BNB' && networkLower.includes('bnb')) return true;
+  
+  return false;
+}
+
+/**
  * Verify a transaction on the blockchain
  * Supports both ERC20 tokens and native transfers (ETH, BNB)
  */
-async function verifyTransaction(txHash, expectedAmount, expectedToken, expectedReceiver, tokenSymbol = 'USDC') {
+async function verifyTransaction(txHash, expectedAmount, expectedToken, expectedReceiver, tokenSymbol = 'USDC', network = 'sepolia') {
   try {
-    const provider = new ethers.JsonRpcProvider(ETH_RPC);
+    const provider = getProvider(network);
 
     // Get transaction receipt
     const receipt = await provider.getTransactionReceipt(txHash);
@@ -29,12 +60,12 @@ async function verifyTransaction(txHash, expectedAmount, expectedToken, expected
       return { valid: false, error: 'Transaction failed' };
     }
 
-    // Check if this is a native token transfer (only ETH, BNB is ERC20 on Sepolia)
+    // Check if this is a native token transfer based on token and network
     const tokenUpper = tokenSymbol.toUpperCase();
-    const isNativeToken = tokenUpper === 'ETH';
+    const isNative = isNativeTokenOnNetwork(tokenSymbol, network);
 
-    if (isNativeToken) {
-      // Verify native ETH transfer
+    if (isNative) {
+      // Verify native transfer (ETH on Ethereum, BNB on BNB Chain)
       return await verifyNativeTransfer(txHash, expectedAmount, expectedReceiver, provider, receipt, tokenUpper);
     } else {
       // Verify ERC20 token transfer
