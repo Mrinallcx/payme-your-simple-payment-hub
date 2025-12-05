@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Copy, CheckCircle2, Circle, Loader2, AlertCircle, Wallet, Clock, ExternalLink } from "lucide-react";
+import { Copy, CheckCircle2, Circle, Loader2, AlertCircle, Wallet, Clock, ExternalLink, Sparkles, ArrowRight, Shield } from "lucide-react";
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain, useSendTransaction } from 'wagmi';
 import { parseUnits, parseEther } from 'viem';
@@ -71,8 +71,6 @@ export default function PaymentView() {
 
         // Handle 402 Payment Required response
         if (response.payment) {
-          // Convert backend format to frontend format
-          // Parse expiresAt - handle both timestamp and ISO string
           let expiresAtTimestamp: number | null = null;
           if (response.payment.expiresAt) {
             expiresAtTimestamp = typeof response.payment.expiresAt === 'string' 
@@ -97,7 +95,6 @@ export default function PaymentView() {
           };
           setPaymentRequest(request);
         } else if (response.request) {
-          // Also handle expiresAt parsing for request format
           const req = response.request;
           if (req.expiresAt && typeof req.expiresAt === 'string') {
             req.expiresAt = new Date(req.expiresAt).getTime();
@@ -172,6 +169,7 @@ export default function PaymentView() {
       return () => clearInterval(timer);
     }
   }, [step, timeRemaining]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -196,6 +194,7 @@ export default function PaymentView() {
       return `${secs}s`;
     }
   };
+
   const handleContinueToPayment = () => {
     if (!selectedNetwork) {
       toast.error("Please select a network");
@@ -204,6 +203,7 @@ export default function PaymentView() {
     setStep("payment");
     setTimeRemaining(120);
   };
+
   const handlePaymentDone = async () => {
     if (!transactionHash) {
       toast.error("Please enter transaction hash");
@@ -218,7 +218,6 @@ export default function PaymentView() {
     try {
       setVerifying(true);
       
-      // Verify payment with backend
       const result = await verifyPayment({
         requestId: paymentRequest.id,
         txHash: transactionHash,
@@ -229,12 +228,10 @@ export default function PaymentView() {
     setStep("success");
         toast.success("Payment verified successfully!");
       } else {
-        // Silently fail - just log to console
         console.log("Payment verification returned non-success status");
       }
     } catch (err) {
       console.error('Error verifying payment:', err);
-      // Silently fail - just log to console instead of showing error toast
     } finally {
       setVerifying(false);
     }
@@ -254,15 +251,12 @@ export default function PaymentView() {
     try {
       setProcessingPayment(true);
 
-      // Get the correct network and token address
       const network = paymentRequest.network.split(',')[0].trim().toLowerCase();
       const requiredChainId = getChainId(network);
       const tokenUpper = paymentRequest.token.toUpperCase();
-      // Check if native token based on token and network (BNB is native on BNB chains, ETH on ETH chains)
       const isNative = checkIsNativeToken(tokenUpper, network);
       setIsNativeToken(isNative);
 
-      // For ERC20 tokens, get the contract address
       const tokenAddress = isNative ? null : getTokenAddress(network, paymentRequest.token);
 
       if (!isNative && !tokenAddress) {
@@ -271,7 +265,6 @@ export default function PaymentView() {
         return;
       }
 
-      // Check if user is on the correct network
       if (chain?.id !== requiredChainId) {
         toast.loading(`Please switch to ${network} network...`);
         try {
@@ -289,7 +282,6 @@ export default function PaymentView() {
       toast.loading("Please confirm transaction in your wallet...");
 
       if (isNative) {
-        // Native ETH transfer
         const amountInWei = parseEther(paymentRequest.amount);
         
         sendTransaction({
@@ -297,7 +289,6 @@ export default function PaymentView() {
           value: amountInWei,
         });
       } else {
-        // ERC20 token transfer
         const decimals = getTokenDecimals(paymentRequest.token);
         const amountInWei = parseUnits(paymentRequest.amount, decimals);
 
@@ -428,8 +419,8 @@ export default function PaymentView() {
     }
   }, [isEthConfirming]);
 
-  const handleCopyAddress = (address: string) => {
-    navigator.clipboard.writeText(address);
+  const handleCopyAddress = (addr: string) => {
+    navigator.clipboard.writeText(addr);
     toast.success("Address copied!");
   };
   
@@ -446,10 +437,8 @@ export default function PaymentView() {
   };
 
   const getNetworkDisplayName = (network: string) => {
-    const networkUpper = network.toUpperCase();
     const networkLower = network.toLowerCase();
     
-    // Handle full network names
     if (networkLower.includes('sepolia')) return "Sepolia (Ethereum Testnet)";
     if (networkLower.includes('eth testnet')) return "Sepolia (Ethereum Testnet)";
     
@@ -462,20 +451,23 @@ export default function PaymentView() {
       ARBITRUM: "Arbitrum",
       SEPOLIA: "Sepolia (Ethereum Testnet)"
     };
-    return names[networkUpper] || network;
+    return names[network.toUpperCase()] || network;
   };
 
-  // Parse networks from comma-separated string
   const networks = paymentRequest?.network.split(',').map(n => n.trim()) || [];
   const selectedWalletAddress = paymentRequest?.receiver || "";
 
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center">
-        <Card className="p-8 text-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-primary/5 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-primary/15 to-accent/25 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-gradient-to-tr from-blue-200/40 to-primary/15 rounded-full blur-3xl" />
+        </div>
+        <Card className="p-8 text-center bg-white/90 backdrop-blur-xl border-white/50 shadow-2xl shadow-primary/10 rounded-3xl relative z-10">
           <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-muted-foreground">Loading payment request...</p>
+          <p className="text-muted-foreground font-medium">Loading payment request...</p>
         </Card>
       </div>
     );
@@ -484,28 +476,50 @@ export default function PaymentView() {
   // Error state
   if (error || !paymentRequest) {
     return (
-      <div className="min-h-screen bg-[#FAFBFC] flex items-center justify-center p-4">
-        <Card className="p-8 text-center max-w-md">
-          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">Payment Request Not Found</h2>
-          <p className="text-muted-foreground mb-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-primary/5 flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-red-500/10 to-orange-500/15 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-gradient-to-tr from-blue-200/40 to-primary/15 rounded-full blur-3xl" />
+        </div>
+        <Card className="p-8 text-center max-w-md bg-white/90 backdrop-blur-xl border-white/50 shadow-2xl shadow-red-500/10 rounded-3xl relative z-10">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500/10 to-rose-500/20 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+          </div>
+          <h2 className="text-2xl font-syne font-bold mb-2">Payment Not Found</h2>
+          <p className="text-muted-foreground mb-6">
             {error || "This payment link is invalid or has expired."}
           </p>
-          <Button onClick={() => navigate("/")} variant="outline">
+          <Button 
+            onClick={() => navigate("/")} 
+            variant="outline"
+            className="rounded-xl hover:bg-primary/5 hover:border-primary/30"
+          >
             Go to Home
           </Button>
         </Card>
       </div>
     );
   }
-  return <div className="min-h-screen bg-[#FAFBFC]">
-      <nav className="bg-white border-b-2 border-[#E8F0FF] px-4 md:px-8 py-4">
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-primary/5 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-primary/15 to-accent/25 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-gradient-to-tr from-blue-200/40 to-primary/15 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#0066ff05_1px,transparent_1px),linear-gradient(to_bottom,#0066ff05_1px,transparent_1px)] bg-[size:60px_60px]" />
+      </div>
+
+      {/* Navbar */}
+      <nav className="relative z-10 bg-white/80 backdrop-blur-xl border-b border-border/50 px-4 md:px-8 py-4">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#0B6FFE] flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/25">
+              <Wallet className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold text-[#0B233F]">Payme</span>
+            <span className="text-2xl font-syne font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              PayMe
+            </span>
           </div>
           <div className="flex items-center gap-3">
             <ConnectButton 
@@ -513,257 +527,286 @@ export default function PaymentView() {
               chainStatus="icon"
               showBalance={false}
             />
-            <Button variant="outline" size="sm" onClick={() => navigate("/")} className="border-[#E8F0FF] hover:bg-[#F8FBFF]">
-              Create Your Link
-            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate("/")} 
+              className="rounded-xl hover:bg-primary/5 hover:border-primary/30 gap-2 hidden sm:flex"
+            >
+              <Sparkles className="h-3 w-3" />
+            Create Your Link
+          </Button>
           </div>
         </div>
       </nav>
       
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-8 relative z-10">
         <div className="max-w-md mx-auto">
-        {step === "select-network" && <Card className="p-8 border-2 border-[#E8F0FF] shadow-lg bg-white">
+          {step === "select-network" && (
+            <Card className="p-8 bg-white/90 backdrop-blur-xl border-white/50 shadow-2xl shadow-primary/10 rounded-3xl">
             <div className="space-y-6">
-              {/* Expiry Timer Banner */}
-              {expiryTimeRemaining !== null && (
-                <div className={`flex items-center justify-center gap-2 py-3 px-4 rounded-lg ${
-                  expiryTimeRemaining <= 0 
-                    ? 'bg-red-50 border border-red-200' 
-                    : expiryTimeRemaining < 3600 
-                      ? 'bg-orange-50 border border-orange-200' 
-                      : 'bg-blue-50 border border-blue-200'
-                }`}>
-                  <Clock className={`h-4 w-4 ${
+                {/* Expiry Timer Banner */}
+                {expiryTimeRemaining !== null && (
+                  <div className={`flex items-center justify-center gap-2 py-3 px-4 rounded-2xl ${
                     expiryTimeRemaining <= 0 
-                      ? 'text-red-500' 
+                      ? 'bg-gradient-to-r from-red-500/10 to-rose-500/15 border border-red-500/20' 
                       : expiryTimeRemaining < 3600 
-                        ? 'text-orange-500' 
-                        : 'text-blue-500'
-                  }`} />
-                  <span className={`text-sm font-medium ${
-                    expiryTimeRemaining <= 0 
-                      ? 'text-red-700' 
-                      : expiryTimeRemaining < 3600 
-                        ? 'text-orange-700' 
-                        : 'text-blue-700'
+                        ? 'bg-gradient-to-r from-orange-500/10 to-amber-500/15 border border-orange-500/20' 
+                        : 'bg-gradient-to-r from-primary/5 to-accent/10 border border-primary/10'
                   }`}>
-                    {expiryTimeRemaining <= 0 
-                      ? 'This payment link has expired' 
-                      : `Expires in ${formatExpiryTime(expiryTimeRemaining)}`}
-                  </span>
-                </div>
-              )}
-
-              <div className="text-center pb-6">
-                <p className="text-[10px] text-[#46658A] font-semibold uppercase tracking-widest mb-4">
-                  Payment Terminal
-                </p>
-                <div className="flex items-center justify-center gap-3 mb-1">
-                  <p className="text-5xl font-bold text-[#0B233F] tracking-tight">
-                    {paymentRequest.amount}
-                  </p>
-                  <Badge className="text-base px-4 py-1.5 bg-[#0B6FFE] hover:bg-[#0547B2]">
-                    {paymentRequest.token}
-                  </Badge>
-                </div>
-                {paymentRequest.description && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    {paymentRequest.description}
-                  </p>
-                )}
-              </div>
-
-              {/* Payment Details Section */}
-              <div className="bg-[#F8FBFF] p-4 rounded-xl border border-[#E8F0FF] space-y-3">
-                <p className="text-[10px] text-[#46658A] font-semibold uppercase tracking-widest">
-                  Payment Details
-                </p>
-                
-                {/* Receiver Address - Full Display */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Transfer To</p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-xs font-mono font-semibold text-[#0B233F] bg-white px-3 py-2 rounded-lg border border-[#E8F0FF] flex-1 break-all">
-                      {selectedWalletAddress}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-8 w-8 shrink-0"
-                      onClick={() => handleCopyAddress(selectedWalletAddress)}
-                    >
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Network/Chain - Clearly Displayed */}
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">Network / Chain</p>
-                  <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-[#E8F0FF]">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{
-                      backgroundColor: `${getNetworkColor(paymentRequest.network.split(',')[0].trim())}20`
-                    }}>
-                      <Circle className="h-3 w-3" fill={getNetworkColor(paymentRequest.network.split(',')[0].trim())} stroke="none" />
-                    </div>
-                    <span className="font-semibold text-sm text-[#0B233F]">
-                      {getNetworkDisplayName(paymentRequest.network.split(',')[0].trim())}
+                    <Clock className={`h-4 w-4 ${
+                      expiryTimeRemaining <= 0 
+                        ? 'text-red-500' 
+                        : expiryTimeRemaining < 3600 
+                          ? 'text-orange-500' 
+                          : 'text-primary'
+                    }`} />
+                    <span className={`text-sm font-semibold ${
+                      expiryTimeRemaining <= 0 
+                        ? 'text-red-700' 
+                        : expiryTimeRemaining < 3600 
+                          ? 'text-orange-700' 
+                          : 'text-primary'
+                    }`}>
+                      {expiryTimeRemaining <= 0 
+                        ? 'This payment link has expired' 
+                        : `Expires in ${formatExpiryTime(expiryTimeRemaining)}`}
                     </span>
                   </div>
+                )}
+
+                {/* Header */}
+              <div className="text-center pb-6">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary/5 rounded-full border border-primary/10 mb-4">
+                    <Sparkles className="w-3 h-3 text-primary" />
+                    <span className="text-xs font-medium text-primary">Payment Terminal</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <p className="text-5xl font-syne font-bold text-foreground tracking-tight">
+                      {paymentRequest.amount}
+                    </p>
+                    <Badge className="text-base px-4 py-1.5 bg-gradient-to-r from-primary to-secondary border-0 shadow-lg shadow-primary/25">
+                      {paymentRequest.token}
+                    </Badge>
+                  </div>
+                  {paymentRequest.description && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {paymentRequest.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Payment Details */}
+                <div className="bg-gradient-to-br from-muted/30 to-primary/5 p-5 rounded-2xl border border-border/50 space-y-4">
+                  <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider flex items-center gap-2">
+                    <Shield className="h-3 w-3" />
+                    Payment Details
+                  </p>
+                  
+                  {/* Receiver Address */}
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2">Transfer To</p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs font-mono font-semibold text-foreground bg-white px-3 py-2.5 rounded-xl border border-border/50 flex-1 break-all shadow-sm">
+                        {selectedWalletAddress}
+                      </code>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-10 w-10 shrink-0 rounded-xl hover:bg-primary/5 hover:border-primary/30"
+                        onClick={() => handleCopyAddress(selectedWalletAddress)}
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
                 </div>
               </div>
 
-              {/* Network Selection - Only show if multiple networks */}
-              {networks.length > 1 && (
-                <div>
-                  <p className="text-[10px] text-[#46658A] font-semibold uppercase tracking-widest mb-4">
-                    Select Network
-                  </p>
-                  <div className="space-y-3">
-                    {networks.map(network => <button key={network} onClick={() => setSelectedNetwork(network)} className={`w-full p-4 rounded-xl border-2 transition-all duration-200 ${selectedNetwork === network ? "border-[#0B6FFE] bg-[#F8FBFF] shadow-md" : "border-[#E8F0FF] hover:border-[#80A9FF] hover:bg-[#FAFBFC]"}`}>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{
-                            backgroundColor: `${getNetworkColor(network)}20`
-                          }}>
-                            <Circle className="h-4 w-4" fill={getNetworkColor(network)} stroke="none" />
-                          </div>
-                          <span className="font-semibold text-[#0B233F]">
-                            {getNetworkDisplayName(network)}
-                          </span>
-                        </div>
-                      </button>)}
-                  </div>
-                </div>
-              )}
-
-              {/* Wallet Payment Option */}
-              <div className="space-y-3">
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-[#E8F0FF]" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Pay with Wallet</span>
-                  </div>
-                </div>
-
-                {!isConnected ? (
-                  <div className="flex flex-col gap-2">
-                    <ConnectButton.Custom>
-                      {({ openConnectModal }) => (
-                        <Button 
-                          className="w-full h-14 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all gap-2"
-                          onClick={openConnectModal}
-                          variant="default"
-                        >
-                          <Wallet className="h-5 w-5" />
-                          Connect Wallet to Pay
-                        </Button>
-                      )}
-                    </ConnectButton.Custom>
-                    <p className="text-xs text-center text-muted-foreground">
-                      Connect your wallet for instant payment
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    <div className="bg-[#F8FBFF] p-3 rounded-lg border border-[#E8F0FF]">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <span className="text-xs text-muted-foreground block mb-1">Paying From</span>
-                          <code className="text-sm font-mono font-semibold text-[#0B233F]">
-                            {address?.slice(0, 6)}...{address?.slice(-4)}
-                          </code>
-                        </div>
-                        <ConnectButton.Custom>
-                          {({ openAccountModal }) => (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={openAccountModal}
-                              className="text-xs"
-                            >
-                              Switch
-                            </Button>
-                          )}
-                        </ConnectButton.Custom>
+                  {/* Network */}
+              <div>
+                    <p className="text-xs text-muted-foreground mb-2">Network / Chain</p>
+                    <div className="flex items-center gap-2 bg-white px-4 py-3 rounded-xl border border-border/50 shadow-sm">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{
+                        backgroundColor: `${getNetworkColor(paymentRequest.network.split(',')[0].trim())}15`
+                      }}>
+                        <Circle className="h-4 w-4" fill={getNetworkColor(paymentRequest.network.split(',')[0].trim())} stroke="none" />
                       </div>
+                      <span className="font-semibold text-sm text-foreground">
+                        {getNetworkDisplayName(paymentRequest.network.split(',')[0].trim())}
+                      </span>
                     </div>
-                    <Button 
-                      className="w-full h-14 text-base font-semibold rounded-xl shadow-md hover:shadow-lg transition-all gap-2"
-                      onClick={handlePayWithWallet}
-                      disabled={processingPayment || isWritePending || isConfirming || isEthPending || isEthConfirming || (expiryTimeRemaining !== null && expiryTimeRemaining <= 0)}
-                    >
-                      {(isWritePending || isEthPending) ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          Confirm in Wallet...
-                        </>
-                      ) : (isConfirming || isEthConfirming) ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          Confirming Transaction...
-                        </>
-                      ) : processingPayment ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          Verifying Payment...
-                        </>
-                      ) : (expiryTimeRemaining !== null && expiryTimeRemaining <= 0) ? (
-                        <>
-                          <AlertCircle className="h-5 w-5" />
-                          Link Expired
-                        </>
-                      ) : (
-                        <>
-                          <Wallet className="h-5 w-5" />
-                          Pay {paymentRequest.amount} {paymentRequest.token}
-                        </>
-                      )}
-                    </Button>
+                  </div>
+                </div>
+
+                {/* Network Selection - Only if multiple */}
+                {networks.length > 1 && (
+                  <div>
+                    <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-4">
+                      Select Network
+                    </p>
+                    <div className="space-y-3">
+                      {networks.map(network => (
+                        <button 
+                          key={network} 
+                          onClick={() => setSelectedNetwork(network)} 
+                          className={`w-full p-4 rounded-2xl border-2 transition-all duration-300 ${
+                            selectedNetwork === network 
+                              ? "border-primary bg-gradient-to-r from-primary/5 to-accent/10 shadow-lg shadow-primary/10" 
+                              : "border-border/50 hover:border-primary/30 hover:bg-primary/5"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{
+                              backgroundColor: `${getNetworkColor(network)}15`
+                      }}>
+                            <Circle className="h-5 w-5" fill={getNetworkColor(network)} stroke="none" />
+                            </div>
+                            <span className="font-semibold text-foreground">
+                              {getNetworkDisplayName(network)}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-[#E8F0FF]" />
+                {/* Wallet Payment */}
+                <div className="space-y-4">
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border/50" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-3 text-muted-foreground font-medium">Pay with Wallet</span>
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Or Pay Manually</span>
+
+                  {!isConnected ? (
+                    <div className="flex flex-col gap-3">
+                      <ConnectButton.Custom>
+                        {({ openConnectModal }) => (
+                          <Button 
+                            className="w-full h-14 text-base font-semibold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                            onClick={openConnectModal}
+                          >
+                            <Wallet className="h-5 w-5" />
+                            Connect Wallet to Pay
+                            <ArrowRight className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </ConnectButton.Custom>
+                      <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
+                        <Shield className="h-3 w-3" />
+                        Connect your wallet for instant payment
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <div className="bg-gradient-to-r from-primary/5 to-accent/10 p-4 rounded-2xl border border-primary/10">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs text-muted-foreground block mb-1">Paying From</span>
+                            <code className="text-sm font-mono font-bold text-foreground">
+                              {address?.slice(0, 6)}...{address?.slice(-4)}
+                            </code>
+                          </div>
+                          <ConnectButton.Custom>
+                            {({ openAccountModal }) => (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={openAccountModal}
+                                className="text-xs rounded-xl hover:bg-primary/5"
+                              >
+                                Switch
+                              </Button>
+                            )}
+                          </ConnectButton.Custom>
+                        </div>
+                      </div>
+                      <Button 
+                        className="w-full h-14 text-base font-semibold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                        onClick={handlePayWithWallet}
+                        disabled={processingPayment || isWritePending || isConfirming || isEthPending || isEthConfirming || (expiryTimeRemaining !== null && expiryTimeRemaining <= 0)}
+                      >
+                        {(isWritePending || isEthPending) ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Confirm in Wallet...
+                          </>
+                        ) : (isConfirming || isEthConfirming) ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Confirming Transaction...
+                          </>
+                        ) : processingPayment ? (
+                          <>
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            Verifying Payment...
+                          </>
+                        ) : (expiryTimeRemaining !== null && expiryTimeRemaining <= 0) ? (
+                          <>
+                            <AlertCircle className="h-5 w-5" />
+                            Link Expired
+                          </>
+                        ) : (
+                          <>
+                            <Wallet className="h-5 w-5" />
+                            Pay {paymentRequest.amount} {paymentRequest.token}
+                            <ArrowRight className="h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Divider */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border/50" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-white px-3 text-muted-foreground font-medium">Or Pay Manually</span>
+                    </div>
                   </div>
+
+                  {/* Manual Payment */}
+                  <Button 
+                    className="w-full h-12 text-base font-semibold rounded-2xl transition-all" 
+                    onClick={handleContinueToPayment} 
+                    disabled={!selectedNetwork}
+                    variant="outline"
+                  >
+                    Continue to Manual Payment
+                  </Button>
                 </div>
-
-                {/* Manual Payment Option */}
-                <Button 
-                  className="w-full h-12 text-base font-semibold rounded-xl transition-all" 
-                  onClick={handleContinueToPayment} 
-                  disabled={!selectedNetwork}
-                  variant="outline"
-                >
-                  Continue to Manual Payment
-              </Button>
               </div>
-            </div>
-          </Card>}
+            </Card>
+          )}
 
-        {step === "payment" && <Card className="p-6 border border-[#E8F0FF] shadow-sm">
+          {step === "payment" && (
+            <Card className="p-6 bg-white/90 backdrop-blur-xl border-white/50 shadow-2xl shadow-primary/10 rounded-3xl">
             <div className="space-y-6">
-              <div className="flex items-center justify-between pb-4 border-b border-[#E8F0FF]">
-                <div className="text-sm flex-1 mr-4">
+                <div className="flex items-center justify-between pb-4 border-b border-border/50">
+                  <div className="text-sm flex-1 mr-4">
                   <p className="text-xs text-muted-foreground mb-1">Paying to</p>
-                  <p className="font-bold text-[#0B233F] font-mono text-xs break-all">
-                    {selectedWalletAddress}
-                  </p>
+                    <p className="font-bold text-foreground font-mono text-xs break-all">
+                      {selectedWalletAddress}
+                    </p>
                 </div>
                 <div className="text-right">
-                  <p className={`text-lg font-bold tabular-nums ${timeRemaining < 30 ? "text-destructive" : "text-[#0B6FFE]"}`}>
+                    <p className={`text-xl font-syne font-bold tabular-nums ${timeRemaining < 30 ? "text-destructive" : "text-primary"}`}>
                     {formatTime(timeRemaining)}
                   </p>
-                  <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive h-auto p-0 mt-1" onClick={() => {
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-destructive hover:text-destructive h-auto p-0 mt-1 text-xs" 
+                      onClick={() => {
                   setStep("select-network");
                   setTimeRemaining(120);
-                }}>
+                      }}
+                    >
                     Cancel
                   </Button>
                 </div>
@@ -771,189 +814,209 @@ export default function PaymentView() {
 
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-4">
-                  <p className="text-2xl font-bold text-[#0B233F]">{paymentRequest.amount} {paymentRequest.token}</p>
-                  <Badge variant="secondary" className="text-xs">{selectedNetwork}</Badge>
-                </div>
-                {paymentRequest.description && (
-                  <p className="text-sm text-muted-foreground">
-                    {paymentRequest.description}
-                  </p>
-                )}
+                    <p className="text-2xl font-syne font-bold text-foreground">{paymentRequest.amount} {paymentRequest.token}</p>
+                    <Badge variant="secondary" className="text-xs rounded-lg">{selectedNetwork}</Badge>
+                  </div>
+                  {paymentRequest.description && (
+                    <p className="text-sm text-muted-foreground">
+                      {paymentRequest.description}
+                    </p>
+                  )}
               </div>
 
-              <div className="bg-white p-6 rounded-lg border-2 border-[#E8F0FF]">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide text-center mb-4">
+                <div className="bg-white p-6 rounded-2xl border border-border/50 shadow-sm">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide text-center mb-4 font-medium">
                   Send to this address
                 </p>
-                <div className="inline-flex items-center justify-center w-full h-48 bg-[#FAFBFC] rounded-lg mb-3 cursor-pointer" onClick={() => handleCopyAddress(selectedWalletAddress)}>
-                  <div className="text-sm text-muted-foreground">QR Code (Click to copy address)</div>
-                </div>
+                  <div 
+                    className="inline-flex items-center justify-center w-full h-48 bg-gradient-to-br from-muted/30 to-primary/5 rounded-xl mb-3 cursor-pointer hover:from-muted/50 hover:to-primary/10 transition-colors border border-border/30" 
+                    onClick={() => handleCopyAddress(selectedWalletAddress)}
+                  >
+                    <div className="text-sm text-muted-foreground">QR Code (Click to copy address)</div>
+                  </div>
               </div>
 
               <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-3 font-medium">
                   Payment Instructions
                 </p>
-                <ol className="space-y-2 text-sm text-[#0B233F]">
+                  <ol className="space-y-2 text-sm text-foreground">
+                    <li className="flex gap-3">
+                      <span className="text-primary font-bold">1.</span>
+                      <span>Open your crypto wallet app (MetaMask, Coinbase, Trust Wallet, etc.)</span>
+                    </li>
                   <li className="flex gap-3">
-                    <span className="text-muted-foreground">1.</span>
-                    <span>Open your crypto wallet app (MetaMask, Coinbase, Trust Wallet, etc.)</span>
+                      <span className="text-primary font-bold">2.</span>
+                      <span>Copy the recipient address below or scan QR code</span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="text-muted-foreground">2.</span>
-                    <span>Copy the recipient address below or scan QR code</span>
+                      <span className="text-primary font-bold">3.</span>
+                      <span>Send exactly {paymentRequest.amount} {paymentRequest.token} on {selectedNetwork} network</span>
                   </li>
                   <li className="flex gap-3">
-                    <span className="text-muted-foreground">3.</span>
-                    <span>Send exactly {paymentRequest.amount} {paymentRequest.token} on {selectedNetwork} network</span>
-                  </li>
-                  <li className="flex gap-3">
-                    <span className="text-muted-foreground">4.</span>
-                    <span>Enter the transaction hash below after sending</span>
+                      <span className="text-primary font-bold">4.</span>
+                      <span>Enter the transaction hash below after sending</span>
                   </li>
                 </ol>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
                     Recipient Address
                   </Label>
-                  <Button variant="ghost" size="sm" className="h-auto p-0 text-xs" onClick={() => handleCopyAddress(selectedWalletAddress)}>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-auto p-0 text-xs text-primary hover:text-primary/80" 
+                      onClick={() => handleCopyAddress(selectedWalletAddress)}
+                    >
                     <Copy className="h-3 w-3 mr-1" />
                     Copy
                   </Button>
                 </div>
-                <code className="block text-xs bg-[#FAFBFC] px-3 py-2 rounded border border-[#E8F0FF] break-all font-mono text-[#0B233F]">
+                  <code className="block text-xs bg-muted/50 px-4 py-3 rounded-xl border border-border/50 break-all font-mono text-foreground">
                   {selectedWalletAddress}
                 </code>
               </div>
 
               <div>
-                <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">
+                  <Label className="text-xs text-muted-foreground uppercase tracking-wide mb-2 block font-medium">
                   Transaction Hash (After sending)
                 </Label>
-                <Input 
-                  placeholder="Enter transaction hash (0x...)" 
-                  value={transactionHash} 
-                  onChange={e => setTransactionHash(e.target.value)} 
-                  className="font-mono text-sm" 
-                  disabled={verifying}
-                />
+                  <Input 
+                    placeholder="Enter transaction hash (0x...)" 
+                    value={transactionHash} 
+                    onChange={e => setTransactionHash(e.target.value)} 
+                    className="font-mono text-sm rounded-xl" 
+                    disabled={verifying}
+                  />
               </div>
 
-              <Button 
-                className="w-full h-12 text-base font-medium" 
-                onClick={handlePaymentDone} 
-                disabled={!transactionHash || verifying}
-              >
-                {verifying ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  "✓ I've sent payment"
-                )}
+                <Button 
+                  className="w-full h-12 text-base font-semibold rounded-2xl bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg shadow-primary/25" 
+                  onClick={handlePaymentDone} 
+                  disabled={!transactionHash || verifying}
+                >
+                  {verifying ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      I've sent payment
+                    </>
+                  )}
               </Button>
             </div>
-          </Card>}
+            </Card>
+          )}
 
-        {step === "success" && <Card className="p-6 border border-[#E8F0FF] shadow-sm">
+          {step === "success" && (
+            <Card className="p-8 bg-white/90 backdrop-blur-xl border-white/50 shadow-2xl shadow-green-500/10 rounded-3xl">
             <div className="space-y-6">
-              <div className="text-center pb-6 border-b border-[#E8F0FF]">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-[#E8F0FF] rounded-full mb-4">
-                  <CheckCircle2 className="w-8 h-8 text-[#0B6FFE]" />
+                <div className="text-center pb-6 border-b border-border/50">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-500/10 to-emerald-500/20 rounded-2xl mb-4 shadow-lg shadow-green-500/20">
+                    <CheckCircle2 className="w-10 h-10 text-green-600" />
                 </div>
-                <h2 className="text-xl font-bold text-[#0B233F] mb-2">
-                  {paymentRequest.status === 'PAID' ? 'Payment Verified!' : 'Payment noted!'}
-                </h2>
+                  <h2 className="text-2xl font-syne font-bold text-foreground mb-2">
+                    {paymentRequest.status === 'PAID' ? 'Payment Verified!' : 'Payment Noted!'}
+                  </h2>
                 <p className="text-sm text-muted-foreground">
-                  {paymentRequest.status === 'PAID' 
-                    ? 'Your payment has been confirmed on the blockchain'
-                    : "We're monitoring the blockchain for your transaction"}
+                    {paymentRequest.status === 'PAID' 
+                      ? 'Your payment has been confirmed on the blockchain'
+                      : "We're monitoring the blockchain for your transaction"}
                 </p>
               </div>
 
-              <div className="bg-[#FAFBFC] p-4 rounded-lg border border-[#E8F0FF] space-y-3 text-sm">
+                <div className="bg-gradient-to-br from-muted/30 to-green-500/5 p-5 rounded-2xl border border-green-500/10 space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Amount</span>
-                  <span className="font-bold text-[#0B233F]">{paymentRequest.amount} {paymentRequest.token}</span>
+                    <span className="font-bold text-foreground">{paymentRequest.amount} {paymentRequest.token}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">To</span>
-                  <span className="font-bold text-[#0B233F] font-mono text-xs">
-                    {selectedWalletAddress.slice(0, 8)}...{selectedWalletAddress.slice(-6)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Network</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">{selectedNetwork}</Badge>
-                    {paymentRequest.txHash && (
-                      <a
-                        href={`${getExplorerUrl(paymentRequest.network)}/tx/${paymentRequest.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 transition-colors"
-                        title="View on Etherscan"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    )}
+                    <span className="font-bold text-foreground font-mono text-xs">
+                      {selectedWalletAddress.slice(0, 8)}...{selectedWalletAddress.slice(-6)}
+                    </span>
                   </div>
-                </div>
-                {paymentRequest.txHash && (
                   <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Transaction Hash</span>
+                    <span className="text-muted-foreground">Network</span>
                     <div className="flex items-center gap-2">
-                      <a
-                        href={`${getExplorerUrl(paymentRequest.network)}/tx/${paymentRequest.txHash}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs font-mono text-primary hover:underline"
-                      >
-                        {paymentRequest.txHash.slice(0, 8)}...{paymentRequest.txHash.slice(-6)}
-                      </a>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => {
-                          navigator.clipboard.writeText(paymentRequest.txHash || '');
-                          toast.success("Transaction hash copied!");
-                        }}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
+                      <Badge variant="secondary" className="text-xs rounded-lg">{selectedNetwork}</Badge>
+                      {paymentRequest.txHash && (
+                        <a
+                          href={`${getExplorerUrl(paymentRequest.network)}/tx/${paymentRequest.txHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:text-primary/80 transition-colors"
+                          title="View on Explorer"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      )}
                     </div>
                   </div>
-                )}
-                {paymentRequest.status === 'PAID' && paymentRequest.paidAt && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Verified</span>
-                    <span className="text-xs">
-                      {new Date(paymentRequest.paidAt).toLocaleString()}
-                    </span>
-              </div>
-                )}
-              </div>
+                  {paymentRequest.txHash && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Transaction Hash</span>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`${getExplorerUrl(paymentRequest.network)}/tx/${paymentRequest.txHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs font-mono text-primary hover:underline"
+                        >
+                          {paymentRequest.txHash.slice(0, 8)}...{paymentRequest.txHash.slice(-6)}
+                        </a>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => {
+                            navigator.clipboard.writeText(paymentRequest.txHash || '');
+                            toast.success("Transaction hash copied!");
+                          }}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
+                      </div>
+                </div>
+                  )}
+                  {paymentRequest.status === 'PAID' && paymentRequest.paidAt && (
+                <div className="flex justify-between">
+                      <span className="text-muted-foreground">Verified</span>
+                      <span className="text-xs">
+                        {new Date(paymentRequest.paidAt).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-              <Button className="w-full h-12 text-base font-medium" onClick={() => navigate("/")}>
-                Create Your Payment Link
+                <Button 
+                  className="w-full h-14 text-base font-semibold rounded-2xl shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 gap-2 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" 
+                  onClick={() => navigate("/")}
+                >
+                  <Sparkles className="h-5 w-5" />
+                  Create Your Payment Link
+                  <ArrowRight className="h-4 w-4" />
               </Button>
 
-              {paymentRequest.status !== 'PAID' && (
-              <div className="pt-4 border-t border-[#E8F0FF]">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {paymentRequest.status !== 'PAID' && (
+                  <div className="pt-4 border-t border-border/50">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
                   <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
-                  {/* <span>Finding your transaction on blockchain...</span> */}
+                      <span>Monitoring blockchain for transaction...</span>
+                    </div>
                 </div>
+                )}
               </div>
-              )}
-            </div>
-          </Card>}
+            </Card>
+          )}
         </div>
       </div>
-    </div>;
+    </div>
+  );
 }
